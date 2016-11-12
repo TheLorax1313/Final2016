@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 
 import edu.wpi.first.wpilibj.Timer;
-
+import edu.wpi.first.wpilibj.RobotDrive.MotorType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -38,6 +38,7 @@ import edu.wpi.first.wpilibj.SampleRobot;
 import edu.wpi.first.wpilibj.Talon;
 
 import edu.wpi.first.wpilibj.Relay;
+import edu.wpi.first.wpilibj.RobotDrive;
 
 /**
 
@@ -65,6 +66,13 @@ public class Robot extends IterativeRobot {
     CANTalon t1 = new CANTalon(1);
     CANTalon t2 = new CANTalon(2);
     CANTalon t3 = new CANTalon(3);   
+    
+    RobotDrive myRobot;
+    CANTalon frontRight, frontLeft, backRight, backLeft, FeedArm;
+    Joystick ohWhatJoy;
+    Talon Shooter, Feeder;
+    Relay BoulderRoller;
+    int ShootToggle, LoopCount;
 
     //Shooter Talon
     Talon nT0 = new Talon(0);
@@ -93,6 +101,27 @@ public class Robot extends IterativeRobot {
         chooser.addObject("My Auto", customAuto);
         SmartDashboard.putData("Auto choices", chooser);
 
+        chooser = new SendableChooser();
+        chooser.addDefault("Default Auto", defaultAuto);
+        chooser.addObject("My Auto", customAuto);
+        SmartDashboard.putData("Auto choices", chooser);
+        ohWhatJoy = new Joystick(0);
+        frontRight = new CANTalon(0);
+        frontLeft = new CANTalon(2);
+        backRight = new CANTalon(1);
+        backLeft = new CANTalon(3);
+        myRobot = new RobotDrive(backLeft, frontLeft, backRight, frontRight);
+        myRobot.setInvertedMotor(MotorType.kFrontRight, true);
+        myRobot.setInvertedMotor(MotorType.kRearRight, true);
+        Shooter = new Talon(0);
+        Feeder = new Talon(1);
+        Feeder.enableDeadbandElimination(true);
+        Shooter.enableDeadbandElimination(true);
+        FeedArm = new CANTalon(5);
+        BoulderRoller = new Relay(0);
+        ShootToggle = 0;
+        
+        
         
         server = CameraServer.getInstance();
         server.setQuality(5);
@@ -183,7 +212,7 @@ public class Robot extends IterativeRobot {
             t3.set(1 * -speed);
         }    	
  
-    	
+    	//myRobot.arcadeDrive(1*(ohWhatJoy.getRawAxis(0)),(1*ohWhatJoy.getRawAxis(1)));
           /** DRIVETRAIN **/  
         // Asks the controller (Xbox360 or Dualshock 4 defined as XB360 using DS4W software)
         // to give variables labeled axis1 and axis2 axis 1 and 5, and place them in variables,
@@ -220,7 +249,18 @@ public class Robot extends IterativeRobot {
             nT1.set(0);
             nT0.set(0);
         }
-        
+        //Roller and arm control
+        Relay.Value Roller;
+        Roller=(ohWhatJoy.getRawButton(1))?Relay.Value.kOn:Relay.Value.kOff;
+        BoulderRoller.set(Roller);
+        if(ohWhatJoy.getRawButton(5))
+        	FeedArm.set(-.5);
+        else{
+        	if(ohWhatJoy.getRawButton(6))
+            	FeedArm.set(.5);
+        	else
+        		FeedArm.set(0);
+        };
         
         
    
