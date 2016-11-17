@@ -2,38 +2,16 @@ package org.usfirst.frc.team957.robot;
 
 
 import edu.wpi.first.wpilibj.CANTalon;
-
+import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.IterativeRobot;
 
 import edu.wpi.first.wpilibj.Joystick;
-
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import edu.wpi.first.wpilibj.CANTalon;
 
-import edu.wpi.first.wpilibj.IterativeRobot;
-
-import edu.wpi.first.wpilibj.Joystick;
-
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
-import com.ni.vision.NIVision.Image;
-
-import edu.wpi.first.wpilibj.CameraServer;
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.buttons.Button;
-
-import edu.wpi.first.wpilibj.buttons.JoystickButton;
-
-import edu.wpi.first.wpilibj.CameraServer;
-
-import edu.wpi.first.wpilibj.SampleRobot;
 
 import edu.wpi.first.wpilibj.Talon;
 
@@ -68,9 +46,9 @@ public class Robot extends IterativeRobot {
     CANTalon t3 = new CANTalon(3);   
     
     RobotDrive myRobot;
-    CANTalon frontRight, frontLeft, backRight, backLeft, FeedArm;
-    Joystick ohWhatJoy;
-    Talon Shooter, Feeder;
+    CANTalon FeedArm;
+    
+    
     Relay BoulderRoller;
     int ShootToggle, LoopCount;
 
@@ -85,7 +63,7 @@ public class Robot extends IterativeRobot {
 
   
     double speed = 0.75;
-
+    int driveToggle;
     /**
 
      * This function is run when the robot is first started up and should be
@@ -101,22 +79,13 @@ public class Robot extends IterativeRobot {
         chooser.addObject("My Auto", customAuto);
         SmartDashboard.putData("Auto choices", chooser);
 
-        chooser = new SendableChooser();
-        chooser.addDefault("Default Auto", defaultAuto);
-        chooser.addObject("My Auto", customAuto);
-        SmartDashboard.putData("Auto choices", chooser);
-        ohWhatJoy = new Joystick(0);
-        frontRight = new CANTalon(0);
-        frontLeft = new CANTalon(2);
-        backRight = new CANTalon(1);
-        backLeft = new CANTalon(3);
-        myRobot = new RobotDrive(backLeft, frontLeft, backRight, frontRight);
-        myRobot.setInvertedMotor(MotorType.kFrontRight, true);
-        myRobot.setInvertedMotor(MotorType.kRearRight, true);
-        Shooter = new Talon(0);
-        Feeder = new Talon(1);
-        Feeder.enableDeadbandElimination(true);
-        Shooter.enableDeadbandElimination(true);
+        
+        //myRobot = new RobotDrive(t1,t2 ,t3 ,t0);
+        //myRobot.setInvertedMotor(MotorType.kFrontRight, true);
+        //myRobot.setInvertedMotor(MotorType.kRearRight, true);
+        
+        
+        
         FeedArm = new CANTalon(5);
         BoulderRoller = new Relay(0);
         ShootToggle = 0;
@@ -164,7 +133,7 @@ public class Robot extends IterativeRobot {
         
         case defaultAuto:
         default:
-         break;
+        	break;
         }
     }
 
@@ -212,7 +181,7 @@ public class Robot extends IterativeRobot {
             t3.set(1 * -speed);
         }    	
  
-    	//myRobot.arcadeDrive(1*(ohWhatJoy.getRawAxis(0)),(1*ohWhatJoy.getRawAxis(1)));
+    	
           /** DRIVETRAIN **/  
         // Asks the controller (Xbox360 or Dualshock 4 defined as XB360 using DS4W software)
         // to give variables labeled axis1 and axis2 axis 1 and 5, and place them in variables,
@@ -220,14 +189,34 @@ public class Robot extends IterativeRobot {
         double axis1 = controller1.getRawAxis(1);
         double axis2 = controller1.getRawAxis(5);
        //Takes axis1 or 2 and puts them in the SRX move command, thereby moving the motors
-
+        boolean but7 = controller1.getRawButton(7);
+        boolean but4 = controller1.getRawButton(4);
+        
         if(POV == -1){
-        	t0.set(axis1 * speed); //right talons
-            t1.set(axis1 * speed);
-            t2.set(axis2 * -speed); //left talons
-            t3.set(axis2 * -speed);       	
-        }       
-   
+        	switch(driveToggle){
+        		case 0: //arcade
+        			//myRobot.arcadeDrive(1*(controller1.getRawAxis(0)),(1*controller1.getRawAxis(1)));
+        			if(but7==true ){
+        				driveToggle = 1;
+        				
+        			break;
+        			}
+        		case 1: //Tank
+        	
+        			t0.set(axis1 * speed); //right talons
+        			t1.set(axis1 * speed);
+        			t2.set(axis2 * -speed); //left talons
+        			t3.set(axis2 * -speed);
+        			if(but4==true){
+        				driveToggle = 0;
+
+        			break;
+        			
+        				
+        			}
+        	
+        	}
+        }
             //Talons and variables for ball feed and shooter
 
         //this checks if Button 5 is being pressed, and then is reset to false if true later33
@@ -251,20 +240,20 @@ public class Robot extends IterativeRobot {
         }
         //Roller and arm control
         Relay.Value Roller;
-        Roller=(ohWhatJoy.getRawButton(1))?Relay.Value.kOn:Relay.Value.kOff;
+        Roller=(controller1.getRawButton(1))?Relay.Value.kOn:Relay.Value.kOff;
         BoulderRoller.set(Roller);
-        if(ohWhatJoy.getRawButton(5))
+        if(controller1.getRawButton(5))
         	FeedArm.set(-.5);
         else{
-        	if(ohWhatJoy.getRawButton(6))
+        	if(controller1.getRawButton(6))
             	FeedArm.set(.5);
         	else
         		FeedArm.set(0);
-        };
+        }
         
-        
+        } 
    
-    }
+    
     
     /**
      * This function is called periodically during test mode
